@@ -1,0 +1,316 @@
+AcWing 92. 递归实现指数型枚举（递归/循环+位运算）
+从 1∼n这 n个整数中随机选取任意多个，输出所有可能的选择方案。
+#include<iostream>
+using namespace std;
+int n;
+//u表示当前的数，state表示用或不用
+void dfs(int u,int state){
+    if(u==n){
+        for(int i=0;i<n;i++){
+            if(state>>i&1)
+                cout<<i+1<<" ";
+        }
+        cout<<"\n";
+        return;
+    }
+    dfs(u+1,state);
+    dfs(u+1,state|1<<u);
+}
+int main(){
+    cin>>n;
+    dfs(0,0);
+    return 0;
+}
+
+AcWing 93. 递归实现组合型枚举
+从 1∼n这 n个整数中随机选出 m个，输出所有可能的选择方案。
+#include<iostream>
+using namespace std;
+int n,m;
+//因为最多可以选m个，所以要加一个sum记录选了几个
+void dfs(int u,int sum,int state){
+    //无法选出m个
+    if(sum+n-u<m) return;
+    //数到m个就开始输出
+    if(sum==m){
+        for(int i=0;i<n;i++){
+            if(state>>i&1){
+                cout<<i+1<<' ';
+            }
+        }
+        cout<<"\n";
+        return;
+    }
+    if(u==n) return;
+    //继续考虑下一个数用或不用的情况
+    dfs(u+1,sum+1,state|1<<u);
+    dfs(u+1,sum,state);
+    
+}
+int main(){
+    cin>>n>>m;
+    dfs(0,0,0);
+    return 0;
+}
+
+AcWing 94. 递归实现排列型枚举 （全排列）
+把 1∼n这 n个整数排成一行后随机打乱顺序，输出所有可能的次序。（按字典序从大到小输出）
+
+#include<iostream>
+#include<vector>
+using namespace std;
+int n;
+//用一个vector来记录当前的排列
+vector<int> path;
+void dfs(int u,int state){
+    //送完了开始输出
+    if(u==n){
+        for(auto x:path) cout<<x<<" ";
+        cout<<"\n";
+        return;
+    }
+    for(int i=0;i<n;i++){
+        //如果第i个数没有搜过
+        if(!(state>>i&1)){
+            path.push_back(i+1);
+            //将第i个数更新为1（已搜索）后继续搜
+            dfs(u+1,state|(1<<i));
+            //还原现场（回溯）
+            path.pop_back();
+        }
+    }
+}
+int main(){
+    cin>>n;
+    dfs(0,0);
+    return 0;
+}
+
+AcWing 95. 费解的开关
+25盏灯排成一个 5×5的方形。每一个灯都有一个开关，游戏者可以改变它的状态。每一步，游戏者可以改变某一个灯的状态。
+游戏者改变一个灯的状态会产生连锁反应：和这个灯上下左右相邻的灯也要相应地改变其状态。
+我们用数字 1表示一盏开着的灯，用数字 0表示关着的灯。给定一些游戏的初始状态，编写程序判断游戏者是否可能在 6步以内使所有的灯都变亮。
+// 思路：我们枚举第一行的点击方法，共32种，完成第一行的点击后，固定第一行，
+// 从第一行开始递推，若达到第n行不全为0，说明这种点击方式不合法。
+// 在所有合法的点击方式中取点击次数最少的就是答案。
+// 对第一行的32次枚举涵盖了该问题的整个状态空间，因此该做法是正确的
+// 
+// 时间复杂度：32*20*5*500 = 一百六十万
+// 对第一行操作有32种可能 * 对前四行有20种操作可能 * 每一次操作都要改变5个灯的状态 * 最多读入的时候可能有500次light矩阵
+//
+// 最关键的两个性质
+// 每一个位置最多只会被点击一次
+// 如果固定了第一行，那么满足题意的点击方案最多只有一种
+#include <bits/stdc++.h>
+using namespace std;
+
+const int N = 10;
+
+char g[N][N];
+
+void turn(int x,int y)
+{
+    int dx[5]={0,1,0,-1,0},dy[5]={0,0,1,0,-1};
+    for(int i=0;i<5;i++)
+    {
+        int xx=x+dx[i],yy=y+dy[i];
+        if(xx>=0 && xx<5 && yy>=0 && yy<5)
+        {
+            g[xx][yy]^=1;
+        }
+    }
+}
+
+int work()
+{
+    int ans = 0x3f3f3f3f;
+    for(int k=0;k< 1<<5;k++)
+    {
+        int res=0;
+        char temp[N][N];
+        memcpy(temp,g,sizeof g);
+        //第一行按灯一共有32种可能，对于每一种可能，我们操作选择后，开始固定，
+        //此时第一行不一定是全亮的状态，第一行只是32种操作可能的一种
+        //然后遍历前四行，如果g[i][j] == '0', 那么turn(i+1, j)
+
+
+        //这一步是枚举第一行的点击方法，只要第一行固定了，那么满足题意的点击方法就只有一种了。
+        //假如第一行是00111, k从0到31进行枚举，如果k = 00001，
+        //那么代表g矩阵中第一行的第一个灯要点击一下，
+        //第一行变为11111。
+        //k不断变大(0变到31)
+        //假如第一行是00111, k从0到31进行枚举，如果k = 10001，
+        //那么代表g矩阵中第一行的第一个灯和最后一个灯要点击一下，
+        //第一行变为11100。
+
+        //之后固定这一行，改变下面的灯看是否能全变亮。
+        //这也就是为什么我们copy light, 每一次对k的枚举都会改变light。
+
+        for(int j=0;j<5;j++)
+        {
+            if(k>>j & 1)
+            {
+                res++;
+                turn(0,j);
+            }
+        }
+        for(int i=0;i<4;i++)
+        {
+            for(int j=0;j<5;j++)
+            {
+                if(g[i][j]=='0')
+                {
+                    res++;
+                    turn(i+1,j);
+                }
+            }
+        }
+
+        bool flag=true;
+        for(int i=0;i<5;i++)
+        {
+            if(g[4][i]!='1')
+            {
+                flag=false;
+                break;
+            }
+        }
+        if(flag) ans = min(ans,res);
+        memcpy(g,temp,sizeof g);
+    }
+    if(ans>6) return -1;
+    else return ans;
+}
+
+int main()
+{
+    int n; cin>>n;
+    while(n--)
+    {
+        for(int i=0;i<5;i++) cin>>g[i];
+        cout<< work() <<endl;   
+    }   
+    return 0;
+}
+
+AcWing 96.奇怪的汉诺塔 （n盘4柱）
+汉诺塔从三个变成四个，从第一个把所有盘子移动到最后一个，求步数
+#include<iostream>
+#include<cstring>
+using namespace std;
+int d[15],f[15];
+int main(){
+    d[1]=1;
+    for(int i=2;i<=12;i++){
+        //先考虑正常三个汉诺塔的情况；
+        //移动i个的步数=将之前已经放好的i-1个移动到边上再将第i个放上去
+        d[i]=d[i-1]*2+1;
+    }
+    //再考虑四个塔的情况
+    memset(f,0x3f,sizeof f);
+    f[0]=0;
+    for(int i=1;i<=12;i++){
+        for(int j=0;j<i;j++){
+            //将四个塔分成3和1，第一次把前j个放在1，后面再把i-j个放好
+            f[i]=min(f[i],f[j]*2+d[i-j]);
+        }
+    }
+    for(int i=1;i<=12;i++) cout<<f[i]<<"\n";
+    return 0;
+}
+
+AcWing 97.约数之和（包含快速幂，约数和板子）
+自然数A，B，求A^B的约数之和
+
+推导部分：
+整数的唯一分解定理：对任意的整数A都有：
+A=p1^k1+......pn^kn
+一共有：
+(k1+1)*(k2+1)*......*(kn+1)
+种组合
+约数和公式：
+对于已经分解的整数A=p1^k1+......pn^kn，
+其约数之和为(1+p1+p1^2+...+p1^k)*(1+p2+p2^k+......)*......(1+pn+...+pn^k)
+
+sum(p,k)=1+p+p^2+...+p^k=(1+p+...+p^(k/2))+(p^(k/2+1)+...+p^k)
+=sum(p,k/2)*(1+p^(k/2+1))
+然后就可以递归求解了
+
+#include<iostream>
+using namespace std;
+const int mod=9901;
+int ksm(int a,int b)//快速幂函数
+{
+    int ans=1;
+    a%=mod;
+    while(b)
+    {
+        if (b&1)
+            ans=ans%mod*a;
+        a=a%mod*a%mod;
+        b>>=1;
+    }
+    return ans;
+}
+long long sum(int p,int k){
+    if(!k) return 1;
+    if(k&1) return ((1+ksm(p,(k+1)>>1))*sum(p,(k-1)>>1))%mod;
+    else return ((1+ksm(p,k>>1))*sum(p,(k>>1)-1)+ksm(p,k))%mod;
+}
+int main(){
+    int a,b;
+    cin>>a>>b;
+    int ans=1;
+    //进行整数的唯一分解
+    for(int i=2;i<=a;i++){
+        int s=0;
+        while(a%i==0){
+            s++;
+            a/=i;
+        }
+        if(s) ans=ans*sum(i,s*b)%mod;
+        //这里(p^k)^b=p^kb
+    }
+    if(!a) cout<<0<<"\n";
+    else cout<<ans<<"\n";
+    return 0;
+}
+
+AcWing 98. 分形之城
+#include <bits/stdc++.h>
+using namespace std;
+#define ll long long
+#define PLL pair<ll,ll>
+PLL calc(ll n,ll m)
+{
+    if (n==0)
+        return make_pair(0,0);
+    ll len=1LL<<(n-1),cnt=1LL<<(2*n-2);
+    PLL pos=calc(n-1,m%cnt);
+    ll x=pos.first,y=pos.second;
+    ll z=m/cnt;
+    if (z==0)
+        return make_pair(y,x);
+    if (z==1)
+        return make_pair(x,y+len);
+    if (z==2)
+        return make_pair(x+len,y+len);
+    return make_pair(2*len-1-y,len-1-x);
+}
+int main()
+{
+    ios::sync_with_stdio(false);
+    int t;
+    cin>>t;
+    while(t--)
+    {
+        ll n,a,b;
+        cin>>n>>a>>b;
+        PLL x=calc(n,a-1);
+        PLL y=calc(n,b-1);
+        ll dx=x.first-y.first,dy=x.second-y.second;
+        double ans=(sqrt(dx*dx+dy*dy)*10);
+        printf("%0.lf\n",ans);
+    }
+    return 0;
+}
