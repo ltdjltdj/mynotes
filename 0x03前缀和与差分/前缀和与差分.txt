@@ -1,0 +1,101 @@
+NOI 2003激光炸弹（二维前缀和）Acwing99.
+标准二维前缀和
+#include<iostream>
+using namespace std;
+const int maxn=5010;
+int g[maxn][maxn];
+int main(){
+    int N,R;
+    cin>>N>>R;
+    R=min(R,5001);
+    int n=R,m=R;
+    for(int i=0,x,y,w;i<N;i++){
+        cin>>x>>y>>w;
+        x++,y++;
+        n=max(n,x),m=max(m,y);
+        g[x][y]+=w;
+    }
+    for(int i=1;i<=n;i++){
+        for(int j=1;j<=m;j++){
+            g[i][j]+=g[i-1][j]+g[i][j-1]-g[i-1][j-1];
+        }
+    }
+    int res=0;
+    for(int i=R;i<=n;i++){
+        for(int j=R;j<=m;j++){
+            res=max(res,g[i][j]-g[i-R][j]-g[i][j-R]+g[i-R][j-R]);
+        }
+    }
+    cout<<res<<"\n";
+    return 0;
+}
+
+AcWing 100. IncDec序列
+差分解决一段区域同时增加或减少的问题
+给区间【L，R】上都加上一个常数c，则b[L] += c , b[R + 1] -=c
+
+求出a的差分序列b，其中b1 = a1,b(i) = a(i) - a(i - 1) (2 <= i <= n)。令b(n + 1) = 0，题目对序列a的操作，
+相当于每次可以选出b1,b2…b(n + 1)中的任意两个数，一个加1，另外一个减一。
+目标是把b2,b3,…bn变为全0。最终得到的数列a就是由 n 个 b1 构成的
+
+任选两个数的方法可分为四类
+1、2 <= i , j <=n（优先）
+2、i = 1, 2 <=j <=n
+3、2 <= i <= n , j = n + 1
+4、i = 1, j = n + 1（没有意义）
+
+设b2,b3....bn中正数总和为p，负数总和的绝对值为q。首先以正负数匹配的方式尽量执行1类操作，
+可执行min(p,q)次。剩余|p - q|个为匹对，每个可以选与b1或b(n + 1)匹配，即执行2 或 3 类操作，共需|p - q|次
+
+综上所诉，最少操作次数为min(p,q) + |p - q|。根据|p - q|次第2、3类操作的选择情况，
+能产生|p - q| + 1中不同的b1的值，即最终得到的序列a可能有|p - q| + 1 种
+
+#include<iostream>
+#include<algorithm>
+using namespace std;
+typedef long long ll;
+const int N=1e5+7;
+int a[N];
+int n;
+int main(){
+    cin>>n;
+    for(int i=1;i<=n;i++) cin>>a[i];
+    //求差分
+    for(int i=n;i>1;i--) a[i]-=a[i-1];
+    ll pos=0,neg=0;
+    //分别加和正项和负项
+    for(int i=2;i<=n;i++){
+        if(a[i]>0) pos+=a[i];
+        else neg-=a[i];
+    }
+    cout<<min(pos,neg)+abs(pos-neg)<<"\n";
+    cout<<abs(pos-neg)+1;
+    return 0;
+}
+
+Acwing101.最高的牛
+#include<iostream>
+#include<set>
+using namespace std;
+const int N=10010;
+int height[N];
+set<pair<int,int>> e; 
+int main(){
+    int n,p,h,m;
+    cin>>n>>p>>h>>m;
+    height[1]=h;
+    //判重
+    for(int i=0,a,b;i<m;i++){
+        cin>>a>>b;
+        if(a>b) swap(a,b);
+        if(!e.count({a,b})){
+            e.insert({a,b});
+            height[a+1]--,height[b]++;
+        }
+    }
+    //通过前缀和得到每个牛的高度
+    for(int i=1;i<=n;i++){
+        height[i]+=height[i-1];
+        cout<<height[i]<<"\n";
+    }
+}
